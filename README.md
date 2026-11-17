@@ -10,6 +10,7 @@ This is a learning project. I work with C#/.NET and built this to learn Kotlin s
 1. Vis listen
 2. Legg til et gjøremål
 3. Ferdigstille et gjøremål
+4. Slette et gjøremål
 
 0. Avslutt
 Velg et tall: 1
@@ -22,6 +23,7 @@ Velg et tall: 1
 - **Show** all todos, with `[V]` for the ones that are done
 - **Add** a new todo (new todos are not done by default)
 - **Mark** a todo as done
+- **Delete** a todo
 - Todos are **saved** in `todos.db`, so they are still there the next time you start the program
 
 The menu text is in Norwegian.
@@ -58,8 +60,12 @@ The database file `todos.db` is created in the project folder the first time you
 | `data class Todo` | One todo: a title, whether it is done, and its id from the database |
 | `connect()` / `createTable()` | Opens the database and creates the `todo` table if it does not exist |
 | `loadTodosFromDatabase()` | Reads all todos when the program starts |
-| `insertTodo()` | Saves a new todo and gets back the id the database gave it |
+| `addTodo()` | Inserts a new todo and gets back the id the database gave it |
+| `saveTodoToDatabase()` | Asks for a title and saves the new todo |
 | `markTodoAsDone()` | Updates a todo in the database |
+| `completeTodo()` | Asks which todo is done and saves it |
+| `deleteTodo()` | Deletes a todo from the database |
+| `removeTodo()` | Asks which todo to delete and removes it |
 | `main()` | The menu, running in a loop until you choose `0` |
 
 The database has one table:
@@ -90,6 +96,7 @@ How the Kotlin in this project compares to what I know from C#:
 | `readln()` / `print()` / `println()` | `Console.ReadLine()` / `Console.Write()` / `Console.WriteLine()` |
 | `"42".toIntOrNull()` | `int.TryParse("42", out var number)` |
 | `todo.copy(done = true)` | `todo with { Done = true }` |
+| `todos.removeAt(index)` | `todos.RemoveAt(index)` |
 | `Int?` and `checkNotNull(x)` | `int?` and `x ?? throw ...` |
 | `.use { }` | `using` |
 | JDBC: `prepareStatement`, `executeQuery`, `executeUpdate` | ADO.NET: `SqlCommand`, `ExecuteReader`, `ExecuteNonQuery` |
@@ -98,7 +105,7 @@ How the Kotlin in this project compares to what I know from C#:
 
 ## Ideas for later
 
-- [ ] Delete a todo
+- [x] Delete a todo
 - [ ] Move the database code into its own `TodoRepository` class
 - [ ] Tests
 - [ ] Turn it into a small REST API with Spring Boot
