@@ -11,6 +11,7 @@ This is a learning project. I work with C#/.NET and built this to learn Kotlin s
 2. Legg til et gjøremål
 3. Ferdigstille et gjøremål
 4. Slette et gjøremål
+5. Endre et gjøremål
 
 0. Avslutt
 Velg et tall: 1
@@ -24,6 +25,7 @@ Velg et tall: 1
 - **Add** a new todo (new todos are not done by default)
 - **Mark** a todo as done
 - **Delete** a todo
+- **Edit** the title of a todo
 - Todos are **saved** in `todos.db`, so they are still there the next time you start the program
 
 The menu text is in Norwegian.
@@ -66,6 +68,8 @@ The database file `todos.db` is created in the project folder the first time you
 | `completeTodo()` | Asks which todo is done and saves it |
 | `deleteTodo()` | Deletes a todo from the database |
 | `removeTodo()` | Asks which todo to delete and removes it |
+| `updateTodo()` | Changes the title of a todo in the database |
+| `editTodo()` | Asks which todo to edit and for the new title |
 | `main()` | The menu, running in a loop until you choose `0` |
 
 The database has one table:
@@ -77,6 +81,8 @@ CREATE TABLE IF NOT EXISTS todo (
     done  INTEGER NOT NULL DEFAULT 0   -- SQLite has no boolean: 0 = false, 1 = true
 )
 ```
+
+Together, these cover all four basic database operations, often called **CRUD**: create (`INSERT`), read (`SELECT`), update (`UPDATE`) and delete (`DELETE`).
 
 All SQL uses parameters (`?`) instead of putting user input directly into the query, which protects against SQL injection.
 
@@ -95,7 +101,7 @@ How the Kotlin in this project compares to what I know from C#:
 | `when (choice) { "1" -> ... else -> ... }` | `switch` expression |
 | `readln()` / `print()` / `println()` | `Console.ReadLine()` / `Console.Write()` / `Console.WriteLine()` |
 | `"42".toIntOrNull()` | `int.TryParse("42", out var number)` |
-| `todo.copy(done = true)` | `todo with { Done = true }` |
+| `todo.copy(done = true)` / `todo.copy(title = newTitle)` | `todo with { Done = true }` / `todo with { Title = newTitle }` |
 | `todos.removeAt(index)` | `todos.RemoveAt(index)` |
 | `Int?` and `checkNotNull(x)` | `int?` and `x ?? throw ...` |
 | `.use { }` | `using` |
@@ -106,6 +112,7 @@ How the Kotlin in this project compares to what I know from C#:
 ## Ideas for later
 
 - [x] Delete a todo
+- [x] Edit a todo
 - [ ] Move the database code into its own `TodoRepository` class
 - [ ] Tests
 - [ ] Turn it into a small REST API with Spring Boot

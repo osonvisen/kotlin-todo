@@ -1,3 +1,4 @@
+import jdk.javadoc.internal.doclets.formats.html.markup.HtmlStyles
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
@@ -39,7 +40,7 @@ fun loadTodosFromDatabase(connection: Connection): MutableList<Todo> {
     return todos
 }
 
-fun addTodo(connection: Connection, title: String):Todo {
+fun saveTodoToDatabase(connection: Connection, title: String):Todo {
     connection.prepareStatement(
         "INSERT INTO todo (title) VALUES (?)",
         Statement.RETURN_GENERATED_KEYS,
@@ -60,12 +61,12 @@ fun printTodos(todos: List<Todo>){
     }
 }
 
-fun saveTodoToDatabase(connection: Connection, todos: MutableList<Todo>){
+fun addTodo(connection: Connection, todos: MutableList<Todo>){
     print("Legg til et gjøremål: ")
     val title = readln()
 
     if (title.isNotBlank()){
-        todos.add(addTodo(connection, title))
+        todos.add(saveTodoToDatabase(connection, title))
     }
 }
 
@@ -133,6 +134,45 @@ fun completeTodo(connection: Connection, todos: MutableList<Todo>){
     println("Ferdig: ${todo.title}")
 }
 
+fun updateTodo(connection: Connection, id: Int, title: String){
+    connection.prepareStatement("UPDATE todo SET title = ? WHERE id = ?").use { statement ->
+        statement.setString(1, title)   // Første placeholder
+        statement.setInt(2, id)         // Andre placeholder
+        statement.executeUpdate()                          // Utfør
+    }
+}
+
+fun editTodo(connection: Connection, todos: MutableList<Todo>){
+    var counter = 1
+    for (todo in todos){
+        println("${counter}. ${todo.title}")
+        counter++
+    }
+    print("Hvilket nummer vil du endre? ")
+    val number = readln().trim().toIntOrNull()
+
+    if (number == null || number !in 1..todos.size){
+        print("Ugyldig tall.")
+        return
+    }
+
+    print("Hva vil du endre den til? ")
+    val edit = readln().trim()
+
+    if (!edit.isNotBlank()){
+        print("Ingen endringer gjort!")
+        return
+    }
+
+    val index = number - 1
+    val todo = todos[index]
+    val id = checkNotNull(todo.id)
+
+    updateTodo(connection, id, edit)
+    todos[index] = todo.copy(title = edit)
+    println("Endret gjøremål ${todo.title} til ${edit}")
+}
+
 fun main() {
     val connection = connect()
     createTable(connection)
@@ -145,15 +185,17 @@ fun main() {
         println("2. Legg til et gjøremål")
         println("3. Ferdigstille et gjøremål")
         println("4. Slette et gjøremål")
+        println("5. Endre et gjøremål")
         println()
         println("0. Avslutt")
         print("Velg et tall: ")
 
         when (readln().trim()) {
             "1" -> printTodos(todos)
-            "2" -> saveTodoToDatabase(connection, todos)
+            "2" -> addTodo(connection, todos)
             "3" -> completeTodo(connection, todos)
             "4" -> removeTodo(connection, todos)
+            "5" -> editTodo(connection, todos)
             "0" -> {
                 println("Hade bra!")
                 return
