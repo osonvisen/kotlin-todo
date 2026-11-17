@@ -43,7 +43,7 @@ You do not need to install Gradle or SQLite. The project uses the Gradle Wrapper
 
 ### Run
 
-In IntelliJ, open the project and click the green arrow next to `fun main()`.
+In IntelliJ, open the project, open `Main.kt` and click the green arrow next to `fun main()`.
 
 From the terminal:
 
@@ -57,20 +57,44 @@ The database file `todos.db` is created in the project folder the first time you
 
 ## How it is built
 
-| Part | What it does |
-|---|---|
-| `data class Todo` | One todo: a title, whether it is done, and its id from the database |
-| `connect()` / `createTable()` | Opens the database and creates the `todo` table if it does not exist |
-| `loadTodosFromDatabase()` | Reads all todos when the program starts |
-| `addTodo()` | Inserts a new todo and gets back the id the database gave it |
-| `saveTodoToDatabase()` | Asks for a title and saves the new todo |
-| `markTodoAsDone()` | Updates a todo in the database |
-| `completeTodo()` | Asks which todo is done and saves it |
-| `deleteTodo()` | Deletes a todo from the database |
-| `removeTodo()` | Asks which todo to delete and removes it |
-| `updateTodo()` | Changes the title of a todo in the database |
-| `editTodo()` | Asks which todo to edit and for the new title |
-| `main()` | The menu, running in a loop until you choose `0` |
+The code is split into four files, each with one responsibility:
+
+```
+src/main/kotlin/
+├── Todo.kt             # The data: one todo
+├── TodoRepository.kt   # All SQL: reading and saving todos
+├── TodoMenu.kt         # Everything the user sees: the menu, input and output
+└── Main.kt             # Connects the parts and starts the menu
+```
+
+| File | Part | What it does |
+|---|---|---|
+| `Todo.kt` | `data class Todo` | One todo: a title, whether it is done, and its id from the database |
+| `TodoRepository.kt` | `createTable()` | Creates the `todo` table if it does not exist |
+| | `findAll()` | Reads all todos, not-done first, then in the order they were created |
+| | `insert()` | Saves a new todo and gets back the id the database gave it |
+| | `markTodoAsDone()` | Marks a todo as done |
+| | `updateTodo()` | Changes the title of a todo |
+| | `deleteTodo()` | Deletes a todo |
+| `TodoMenu.kt` | `run()` | The menu, running in a loop until you choose `0` |
+| | `addTodo()`, `completeTodo()`, `editTodo()`, `removeTodo()` | Ask the user what to do and call the repository |
+| `Main.kt` | `main()` | Opens the database, creates the repository and the menu, and starts it |
+
+`TodoRepository` gets the database connection through its constructor, and `TodoMenu` gets the repository through its constructor. The menu never sees SQL, and the repository never prints anything.
+
+### Design decision: the database decides the order
+
+`findAll()` sorts the todos in SQL with `ORDER BY done, id`, so the todos that are not done come first.
+
+The menu keeps a list of todos in memory, so that it can show them with numbers. After every change (add, complete, edit or delete), the menu does not update that list itself. It **reloads the whole list from the database** instead.
+
+Why:
+
+- **One source of truth.** The list on screen always matches what is stored, and it is always sorted the same way. If a todo is marked as done, it moves down the list right away.
+- **The numbers always match.** The numbers the user picks from are positions in the current list. Because the list is rebuilt after every change, a number can never point to the wrong todo.
+- **Simpler code.** The menu does not need to add, replace or remove items in the list by hand.
+
+The cost is one extra database query after each change. With a few todos in a local SQLite file, that is not noticeable. It is also how a web API usually works: each request reads fresh data from the database.
 
 The database has one table:
 
@@ -103,6 +127,8 @@ How the Kotlin in this project compares to what I know from C#:
 | `"42".toIntOrNull()` | `int.TryParse("42", out var number)` |
 | `todo.copy(done = true)` / `todo.copy(title = newTitle)` | `todo with { Done = true }` / `todo with { Title = newTitle }` |
 | `todos.removeAt(index)` | `todos.RemoveAt(index)` |
+| `class TodoRepository(private val connection: Connection)` | Primary constructor: `class TodoRepository(SqlConnection connection)` |
+| `private fun` / `private val` | `private` |
 | `Int?` and `checkNotNull(x)` | `int?` and `x ?? throw ...` |
 | `.use { }` | `using` |
 | JDBC: `prepareStatement`, `executeQuery`, `executeUpdate` | ADO.NET: `SqlCommand`, `ExecuteReader`, `ExecuteNonQuery` |
@@ -113,7 +139,8 @@ How the Kotlin in this project compares to what I know from C#:
 
 - [x] Delete a todo
 - [x] Edit a todo
-- [ ] Move the database code into its own `TodoRepository` class
+- [x] Move the database code into its own `TodoRepository` class
+- [x] Split the app into data, repository, menu and `main`
 - [ ] Tests
 - [ ] Turn it into a small REST API with Spring Boot
 
