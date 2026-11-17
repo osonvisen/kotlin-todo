@@ -20,7 +20,7 @@ class TodoRepository(private val connection: Connection) {
     fun findAll(): List<Todo> {
         val todos = mutableListOf<Todo>()
         connection.createStatement().use { statement ->
-            statement.executeQuery("SELECT id, title, done FROM todo ORDER BY id").use { rows ->
+            statement.executeQuery("SELECT id, title, done FROM todo ORDER BY done, id ASC").use { rows ->
                 while (rows.next()) {
                     todos.add(
                         Todo(
