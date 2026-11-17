@@ -69,6 +69,36 @@ fun saveTodoToDatabase(connection: Connection, todos: MutableList<Todo>){
     }
 }
 
+fun deleteTodo(connection: Connection, id: Int){
+    connection.prepareStatement("DELETE FROM todo WHERE id = ?").use { statement ->
+        statement.setInt(1, id)
+        statement.executeUpdate()
+    }
+}
+
+fun removeTodo(connection: Connection, todos: MutableList<Todo>){
+    var counter = 1
+    for (todo in todos){
+        println("${counter}. ${todo.title}")
+        counter++
+    }
+
+    print("Hvilket nummer vil du slette? ")
+    val number = readln().trim().toIntOrNull()
+    if (number == null || number !in 1..todos.size){
+        print("Ugyldig tall.")
+        return
+    }
+
+    val index = number - 1
+    val todo = todos[index]
+    val id = checkNotNull(todo.id)
+
+    deleteTodo(connection, id)
+    todos.removeAt(index)
+    println("Slettet gjøremål ${todo.title}")
+}
+
 fun markTodoAsDone(connection: Connection, id: Int){
     connection.prepareStatement("UPDATE todo SET done = 1 WHERE id = ?").use { statement ->
         statement.setInt(1, id)
@@ -114,6 +144,7 @@ fun main() {
         println("1. Vis listen")
         println("2. Legg til et gjøremål")
         println("3. Ferdigstille et gjøremål")
+        println("4. Slette et gjøremål")
         println()
         println("0. Avslutt")
         print("Velg et tall: ")
@@ -122,6 +153,7 @@ fun main() {
             "1" -> printTodos(todos)
             "2" -> saveTodoToDatabase(connection, todos)
             "3" -> completeTodo(connection, todos)
+            "4" -> removeTodo(connection, todos)
             "0" -> {
                 println("Hade bra!")
                 return
