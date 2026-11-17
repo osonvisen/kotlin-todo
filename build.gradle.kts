@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass = "TodoKt"
+    mainClass = "MainKt"
 }
 
 tasks.named<JavaExec>("run") {
